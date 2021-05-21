@@ -147,7 +147,7 @@ func (f *InputOperator) poll(ctx context.Context) {
 			}
 			f.SeenPaths[path] = struct{}{}
 		}
-		file, err := os.Open(path)
+		file, err := os.Open(path) // #nosec - log files are read based on user specified directory
 		if err != nil {
 			f.Errorw("Failed to open file", zap.Error(err))
 			continue
@@ -172,7 +172,9 @@ func (f *InputOperator) poll(ctx context.Context) {
 
 	// Close all files
 	for _, file := range files {
-		file.Close()
+		if err := file.Close(); err != nil {
+			f.Errorf(err.Error())
+		}
 	}
 
 	f.saveCurrent(readers)
